@@ -173,7 +173,7 @@
                 // Send the file metadata: name and total number of chunks (as text)
                 const metadata = {
                     filename: file.name,
-                    totalChunks: totalChunks
+                    total_chunks: totalChunks
                 };
                 ws.send(JSON.stringify(metadata));
 

@@ -1,21 +1,23 @@
 from fastapi import FastAPI, WebSocket, HTTPException
+from fastapi.responses import FileResponse, StreamingResponse
+from pathlib import Path
+from pydantic import BaseModel
 import os
 import json
-from pathlib import Path
-from fastapi.responses import FileResponse, StreamingResponse
-from pydantic import BaseModel
 import aiofiles  
-app = FastAPI()
-uplaod_dir: str     = "./uploads"
-download_dir: str   = "./donwloads"
-html_file_path: str = "./root.html"
 
-os.makedirs(uplaod_dir, exist_ok=True)  # Ensure the upload directory exists
-os.makedirs(download_dir, exist_ok=True)  # Ensure the download directory exists
+app = FastAPI()
+
+uplaod_dir     = "./uploads"
+download_dir   = "./donwloads"
+html_file_path = "./index.html"
+
+os.makedirs(uplaod_dir, exist_ok=True)
+os.makedirs(download_dir, exist_ok=True)
 
 class FileUploadInfo(BaseModel):
     filename: str
-    totalChunks: int
+    total_chunks: int
 
 class FileInfo(BaseModel):
     filename: str
@@ -30,7 +32,7 @@ async def get_files_info()-> list[FileInfo]:
     file_info_list = []
     for filename in os.listdir(uplaod_dir):
         file_path = os.path.join(uplaod_dir, filename)
-        if os.path.isfile(file_path): # Check if it is a file (not a folder)
+        if os.path.isfile(file_path):
             file_size = os.path.getsize(file_path)
             file_info = FileInfo(filename=filename, file_size=file_size)
             file_info_list.append(file_info)
@@ -48,14 +50,12 @@ async def download_file(filename: str) ->StreamingResponse:
     HTTP download handler that serves large files from the server with asynchronous streaming.
     """
     file_path = Path(uplaod_dir) / filename
-    # Check if the file exists
+
     if not file_path.is_file():
         raise HTTPException(status_code=404, detail="File not found")
 
-    # Get the total file size
     file_size = os.path.getsize(file_path)
 
-    # Return a streaming response with the file size included in the headers
     return StreamingResponse(
         file_iterator(file_path), 
         media_type="application/octet-stream",
@@ -71,15 +71,15 @@ async def websocket_endpoint(websocket: WebSocket):
 
     total_chunks = 0
 
-    # Step 1: Receive metadata (file name and total chunk count)
+    # Receive metadata (file name and total chunk count)
     message: str = await websocket.receive_text()
     file_info: FileUploadInfo = FileUploadInfo(**json.loads(message))
     filename: str = file_info.filename
-    total_chunks: int = file_info.totalChunks
+    total_chunks: int = file_info.total_chunks
 
     file_path = Path(download_dir) / filename
 
-    # Step 2: Open the file asynchronously and reading the chunks one by one
+    # Open the file asynchronously and reading the chunks one by one
     async with aiofiles.open(file_path, "wb") as f:
         for chunk_index in range(total_chunks):
             chunk = await websocket.receive_bytes()  # Receive binary chunk
@@ -91,6 +91,6 @@ async def websocket_endpoint(websocket: WebSocket):
             progress = (chunk_index + 1) / total_chunks * 100
             await websocket.send_text(json.dumps({"status": "uploading", "progress": progress}))
 
-    # Step 3: Send confirmation to the client
+    # Send confirmation to the client
     await websocket.send_text(json.dumps({"status": "complete", "filePath": str(file_path)}))
     await websocket.close()
