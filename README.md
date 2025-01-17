@@ -16,6 +16,10 @@ This is a **FastAPI** web application that serves as a platform for sharing file
 
 ---
 
+**Note:** This repo has been tested only on Ubuntu 24.04.
+
+---
+
 ## Installation and Running the Application
 
 ### 1. Clone the Repository
@@ -26,6 +30,8 @@ cd  sharefile
 ### 2. Follow one of A or B installation and running method 
 
 #### A. Normal Installation
+
+##### For Linux/MacOS Users
 1. Create a virtual environment:
    ```bash
    python3 -m venv myenv
@@ -47,7 +53,31 @@ cd  sharefile
    uvicorn shareFile:app --host 0.0.0.0 --port 8000 --reload
    ```
 
+##### For Windows Users
+1. Create a virtual environment:
+   ```cmd
+   python -m venv myenv
+   ```
+2. Activate the virtual environment:
+   ```cmd
+   myenv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```cmd
+   pip install -r requirements.txt
+   ```
+4. Navigate to the `sharefile` directory:
+   ```cmd
+   cd sharefile
+   ```
+5. Run the application:
+   ```cmd
+   uvicorn shareFile:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
 #### B. Using Docker
+
+##### For Linux/MacOS Users
 1. Build the Docker image:
    ```bash
    docker build -t sharefile-app .
@@ -55,6 +85,16 @@ cd  sharefile
 2. Run the Docker container:
    ```bash
    docker run -it --rm -p 8000:8000 -v $(pwd):/app sharefile-app
+   ```
+
+##### For Windows Users
+1. Build the Docker image:
+   ```cmd
+   docker build -t sharefile-app .
+   ```
+2. Run the Docker container:
+   ```cmd
+   docker run -it --rm -p 8000:8000 -v %cd%:/app sharefile-app
    ```
 
 ---
@@ -67,11 +107,10 @@ cd  sharefile
    - Place files in the `uploads` folder for clients to download.
    - Clients can upload files, and the uploaded files will be stored in the `downloads` folder.
 
-
-
 ---
 
 ## License
 This project is licensed under the [MIT License](LICENSE).
 
 ---
+
